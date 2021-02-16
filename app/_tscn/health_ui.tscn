@@ -1,0 +1,29 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://_gdns/health_ui.gdns" type="Script" id=1]
+[ext_resource path="res://resources/UI/HeartUIEmpty.png" type="Texture" id=2]
+[ext_resource path="res://resources/UI/HeartUIFull.png" type="Texture" id=3]
+
+[node name="HealthUi" type="Control"]
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+hearts = 1
+
+[node name="HeartsEmpty" type="TextureRect" parent="."]
+margin_right = 45.0
+margin_bottom = 11.0
+texture = ExtResource( 2 )
+expand = true
+stretch_mode = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HeartsFull" type="TextureRect" parent="."]
+margin_right = 15.0
+margin_bottom = 11.0
+texture = ExtResource( 3 )
+expand = true
+stretch_mode = 2

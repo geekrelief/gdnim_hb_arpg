@@ -1,0 +1,14 @@
+[gd_resource type="NativeScript" load_steps=2 format=2]
+
+[sub_resource type="GDNativeLibrary" id=1]
+entry/Windows.64 = "res://_dlls/grass.dll"
+entry/X11.64 = "res://_dlls/grass.so"
+entry/OSX.64 = "res://_dlls/grass.dylib"
+dependency/Windows.64 = [  ]
+dependency/X11.64 = [  ]
+dependency/OSX.64 = [  ]
+
+[resource]
+resource_name = "Grass"
+class_name = "Grass"
+library = SubResource( 1 )

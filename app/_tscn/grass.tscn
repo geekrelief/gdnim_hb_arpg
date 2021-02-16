@@ -1,0 +1,31 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://resources/World/Grass.png" type="Texture" id=1]
+[ext_resource path="res://_gdns/grass.gdns" type="Script" id=2]
+[ext_resource path="res://scenes/area2d.tscn" type="PackedScene" id=3]
+[ext_resource path="res://resources/Shadows/MediumShadow.png" type="Texture" id=4]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 7, 7 )
+
+[node name="Grass" type="Node2D"]
+script = ExtResource( 2 )
+
+[node name="Shadow" type="Sprite" parent="."]
+position = Vector2( 8, 3 )
+texture = ExtResource( 4 )
+
+[node name="Sprite" type="Sprite" parent="."]
+texture = ExtResource( 1 )
+centered = false
+offset = Vector2( -8, -16 )
+
+[node name="Area2D" parent="." instance=ExtResource( 3 )]
+collision_layer = 8
+collision_mask = 0
+
+[node name="CollisionShape2D" parent="Area2D" index="0"]
+position = Vector2( 8, 0 )
+shape = SubResource( 1 )
+
+[editable path="Area2D"]
