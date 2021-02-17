@@ -13,6 +13,8 @@ type
     hint: Option[string]
     hintStr: Option[string]
     usage: NimNode
+    setter: Option[string]
+    getter: Option[string]
     isExported: bool
 
   MethodDecl = ref object
@@ -161,6 +163,8 @@ proc identDefsToVarDecls(identDefs: NimNode): seq[VarDecl] =
     let hint = removeStrPragma(nameNode, "hint")
     let hintStr = removeStrPragma(nameNode, "hintStr")
     let usage = removePragmaNode(nameNode, "usage")
+    var setter = removeStrPragma(nameNode, "set")
+    var getter = removeStrPragma(nameNode, "get")
     let isGdExport = removePragma(nameNode, "gdExport")
 
     result.add(VarDecl(
@@ -172,6 +176,8 @@ proc identDefsToVarDecls(identDefs: NimNode): seq[VarDecl] =
       hintStr: hintStr,
       isNoGodot: not isGdExport,
       usage: usage,
+      setter: setter,
+      getter: getter,
       isExported: nameNode.isExported()
     ))
 
@@ -551,11 +557,30 @@ template registerGodotClass(classNameIdent, classNameLit; isRefClass: bool;
     nativeScriptRegisterClass(getNativeLibHandle(), classNameLit,
                               baseNameLit, createFuncObj, destroyFuncObj)
 
+macro setterAssign(classNameIdent, nimPtr, propNameIdent, setterName, nimVal) =
+  if setterName.strVal == "NIM":
+    quote do:
+      cast[`classNameIdent`](`nimPtr`).`propNameIdent` = `nimVal`
+  else:
+    var setterNameIdent = ident(setterName.strVal)
+    quote do:
+      cast[`classNameIdent`](`nimPtr`).`setterNameIdent`(`nimVal`)
+
+macro getterAssign(classNameIdent, nimPtr, propNameIdent, getterName) =
+  if getterName.strVal == "NIM":
+    quote do:
+      let variant{.inject.} = nimToGodot(cast[`classNameIdent`](`nimPtr`).`propNameIdent`)
+  else:
+    var getterNameIdent = ident(getterName.strVal)
+    quote do:
+      let variant{.inject.} = nimToGodot(cast[`classNameIdent`](`nimPtr`).`getterNameIdent`())
+
 template registerGodotField(classNameLit, classNameIdent, propNameLit,
                             propNameIdent, propTypeLit, propTypeIdent,
                             setFuncIdent, getFuncIdent, hintStrLit,
-                            hintIdent, usageExpr, hasDefaultValue,
-                            defaultValueNode) =
+                            hintIdent, usageExpr,
+                            setterName, getterName,
+                            hasDefaultValue, defaultValueNode) =
   proc setFuncIdent(obj: ptr GodotObject, methData: pointer,
                     nimPtr: pointer, val: GodotVariant) {.noconv.} =
     let variant = newVariant(val)
@@ -563,7 +588,7 @@ template registerGodotField(classNameLit, classNameIdent, propNameLit,
     let (nimVal, err) = godotToNim[propTypeIdent](variant)
     case err:
     of ConversionResult.OK:
-      cast[classNameIdent](nimPtr).propNameIdent = nimVal
+      setterAssign(classNameIdent, nimPtr, propNameIdent, setterName, nimVal)
     of ConversionResult.TypeError:
       let errStr = typeError(propTypeLit, $val, val.getType(),
                              classNameLit, astToStr(propNameIdent))
@@ -575,7 +600,7 @@ template registerGodotField(classNameLit, classNameIdent, propNameLit,
 
   proc getFuncIdent(obj: ptr GodotObject, methData: pointer,
                     nimPtr: pointer): GodotVariant {.noconv.} =
-    let variant = nimToGodot(cast[classNameIdent](nimPtr).propNameIdent)
+    getterAssign(classNameIdent, nimPtr, propNameIdent, getterName)
     variant.markNoDeinit()
     result = variant.godotVariant[]
 
@@ -756,6 +781,10 @@ proc genType(obj: ObjectDecl): NimNode {.compileTime.} =
         newLit(ord(GodotPropertyUsage.Default) or
                ord(GodotPropertyUsage.ScriptVariable))
       else: field.usage
+    let setterName = if field.setter.isNone: "NIM"
+                          else: field.setter.get
+    let getterName = if field.getter.isNone: "NIM"
+                          else: field.getter.get
     let hasDefaultValue = not field.defaultValue.isNil and
                           field.defaultValue.kind != nnkEmpty
     let hintIdent = ident(hint)
@@ -767,6 +796,7 @@ proc genType(obj: ObjectDecl): NimNode {.compileTime.} =
                          field.typ, genSym(nskProc, "setFunc"),
                          genSym(nskProc, "getFunc"),
                          newStrLitNode(hintStr), hintIdent, usage,
+                         setterName, getterName,
                          ident($hasDefaultValue), field.defaultValue)))
 
   # Register methods
@@ -915,15 +945,22 @@ macro gdobj*(ast: varargs[untyped]): untyped =
   ##     var myField: int
   ##       ## Not exported to Godot (i.e. editor and scripts will not see this field).
   ##
-  ##     var myString* {.gdExport, hint: Length, hintStr: "20".}: string
+  ##     var myString* {.gdExport, hint: Length, hintStr: "20", set:"setMyString".}: string
   ##       ## Exported to Godot as ``my_string``.
   ##       ## Editor will limit this string to length 20.
   ##       ## ``hint` is a value of ``GodotPropertyHint`` enum.
   ##       ## ``hintStr`` depends on the value of ``hint``, its format is
   ##       ## described in ``GodotPropertyHint`` documentation.
+  ##       ## ``set`` is a setter function, called when Object.setImpl is
+  ##       ##     called or when the inspector value changes,
+  ##       ## ``get`` defines the getter function
   ##
   ##     signal my_signal(amount:int, message:string)
   ##       ## Defines a signal ``my_signal`` with parameters
+  ##
+  ##     proc setMyString(value:string) =
+  ##       self.myString = value
+  ##       print "set myString = " & self.myString
   ##
   ##     method ready*() =
   ##       ## Exported methods are exported to Godot by default,
