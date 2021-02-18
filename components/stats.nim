@@ -15,7 +15,7 @@ gdobj Stats of Node:
     #save()
 
   method enter_tree() =
-    discard register(stats)#?.load()
+    .= register(stats)#?.load()
 
   method ready() =
     self.set_max_health(self.max_health)

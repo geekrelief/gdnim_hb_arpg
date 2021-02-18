@@ -28,6 +28,10 @@ window/size/test_height=720
 window/stretch/mode="2d"
 window/stretch/aspect="keep"
 
+[editor_plugins]
+
+enabled=PoolStringArray( "inspector-gadget" )
+
 [input]
 
 ui_left={
@@ -78,6 +82,7 @@ roll={
 2d_physics/layer_3="PlayerHurtBox"
 2d_physics/layer_4="EnemyHurtBox"
 2d_physics/layer_5="Enemy"
+2d_physics/layer_6="SoftCollisions"
 
 [rendering]
 
