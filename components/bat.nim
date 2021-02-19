@@ -43,15 +43,12 @@ gdobj Bat of KinematicBody2D:
     case compName:
     of "stats":
       if isUnloading:
-        self.stats.disconnect("no_health", self, "on_stats_no_health")
         self.stats = nil
       else:
         self.stats = self.get_node("Stats")
         discard self.stats.connect("no_health", self, "on_stats_no_health")
     of "detection_zone":
       if isUnloading:
-        self.detectionZone.disconnect("player_found", self, "on_player_found")
-        self.detectionZone.disconnect("player_lost", self, "on_player_lost")
         self.detectionZone = nil
       else:
         self.detectionZone = self.get_node("DetectionZone")
@@ -96,11 +93,12 @@ gdobj Bat of KinematicBody2D:
         if not self.playerTarget.isNil:
           var direction = directionTo(self.globalPosition, self.playerTarget.globalPosition)
           self.velocity = self.velocity.move_toward(direction * self.MaxSpeed, self.Acceleration * delta)
-        self.sprite.flip_h = self.velocity.x < 0
       of FLEE:
         if not self.playerTarget.isNil:
           var direction = directionTo(self.playerTarget.globalPosition, self.globalPosition)
           self.velocity = self.velocity.move_toward(direction * self.MaxSpeed, self.Acceleration * 1.1 * delta)
+
+    self.sprite.flip_h = self.velocity.x < 0
 
     if self.softCollision.call("is_colliding").asBool:
       var push_vector = self.softCollision.call("get_push_vector").asVector2

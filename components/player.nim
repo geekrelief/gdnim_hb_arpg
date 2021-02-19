@@ -46,7 +46,6 @@ gdobj Player of KinematicBody2D:
     case compName:
       of "stats":
         if isUnloading:
-          self.stats.disconnect("no_health", self, "on_no_health")
           self.stats = nil
         else:
           self.stats = self.get_node("Stats") as Node
