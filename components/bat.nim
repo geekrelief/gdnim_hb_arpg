@@ -15,6 +15,7 @@ gdobj Bat of KinematicBody2D:
   var Acceleration {.gdExport.}:float = 350.0
   var MaxSpeed {.gdExport.}:float = 150.0
   var PushAmount {.gdExport.}:float = 1000.0
+  var WanderRadius {.gdExport.}:float = 100.0
 
   var worldSize:Rect2
 
@@ -34,10 +35,12 @@ gdobj Bat of KinematicBody2D:
 
   var softCollision:Node
   var wanderVector:Vector2
+  var wanderRadius:float
+  var startPos:Vector2
 
   proc hot_unload():seq[byte] {.gdExport.} =
     self.queue_free()
-    save(self.position)
+    save(self.position, self.startPos)
 
   proc hot_depreload(compName:string, isUnloading:bool = false) {.gdExport.} =
     case compName:
@@ -61,7 +64,9 @@ gdobj Bat of KinematicBody2D:
         self.softCollision = self.get_node("SoftCollisions")
 
   method enter_tree() =
-    register(bat)?.load(self.position)
+    self.startPos = self.globalPosition
+    register(bat)?.load(self.position, self.startPos)
+    self.globalPosition = self.startPos
     register_dependencies(bat, stats, detection_zone, soft_collisions)
 
     self.hot_depreload("stats")
@@ -111,6 +116,7 @@ gdobj Bat of KinematicBody2D:
     var damage = area.get_node("Damage").getImpl("amount")
     discard self.stats.call("dec_health", damage)
     self.state = FLEE
+    self.modulate = initColor(1.0, 1.0, 0.0)
     asyncCheck self.asyncWander()
 
   proc onStatsNoHealth() {.gdExport.} =
@@ -122,6 +128,7 @@ gdobj Bat of KinematicBody2D:
   proc onPlayerFound(player:Node) {.gdExport.} =
     self.playerTarget = player as Node2D
     self.state = CHASE
+    self.modulate = initColor(1.0, 0.0, 0.0)
     asyncCheck self.asyncWander()
 
   proc onPlayerLost() {.gdExport.} =
@@ -132,6 +139,7 @@ gdobj Bat of KinematicBody2D:
     await on_signal(self.getTree().createTimer(0.15), "timeout")
     if self.playerTarget.isNil:
       self.state = IDLE
+      self.modulate = initColor(0.5, 0.5, 0.5)
       asyncCheck self.asyncWander()
 
   proc asyncWander() {.async.} =
@@ -139,9 +147,10 @@ gdobj Bat of KinematicBody2D:
       await on_signal(self.getTree().createTimer(2.0), "timeout")
       if self.state == IDLE or self.state == WANDER:
         self.state = WANDER
-        self.wanderVector = vec2(rand(100.0), rand(100.0)) - vec2(50.0, 50.0)
+        self.modulate = initColor(1.0, 1.0, 1.0)
+        self.wanderVector = vec2(rand(self.WanderRadius * 2), rand(self.WanderRadius * 2)) - vec2(self.WanderRadius, self.WanderRadius)
 
-        if not self.worldSize.contains(self.globalPosition):
-          var toWorldCenter = self.globalPosition.directionTo(self.worldSize.size * 0.5)
-          while self.wanderVector.dot(toWorldCenter) < 0.0:
-            self.wanderVector = vec2(rand(100.0), rand(100.0)) - vec2(50.0, 50.0)
+        var toStartPos = self.startPos - self.globalPosition
+        if toStartPos.length > self.WanderRadius:
+          while self.wanderVector.dot(toStartPos) < 0.0:
+            self.wanderVector = vec2(rand(self.WanderRadius * 2), rand(self.WanderRadius * 2)) - vec2(self.WanderRadius, self.WanderRadius)

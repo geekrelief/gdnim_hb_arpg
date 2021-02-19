@@ -46,7 +46,7 @@ radius = 6.0
 height = 12.0
 
 [sub_resource type="CircleShape2D" id=9]
-radius = 75.1066
+radius = 57.0088
 
 [sub_resource type="CircleShape2D" id=10]
 radius = 5.09902
@@ -57,10 +57,8 @@ radius = 4.0
 [node name="Bat" type="KinematicBody2D"]
 collision_layer = 16
 script = ExtResource( 1 )
-__meta__ = {
-"_edit_group_": true
-}
 _hit_speed = 300.0
+_wander_radius = 50.0
 
 [node name="ShadowCollisionShape2D" type="CollisionShape2D" parent="."]
 visible = false
@@ -90,7 +88,6 @@ shape = SubResource( 8 )
 max_health = 2
 
 [node name="DetectionZone" parent="." instance=ExtResource( 7 )]
-visible = false
 modulate = Color( 1, 1, 1, 0.537255 )
 show_behind_parent = true
 
