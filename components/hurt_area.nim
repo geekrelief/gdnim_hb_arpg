@@ -5,6 +5,9 @@ gdobj HurtArea of Area2D:
   var hasInvincibility {.gdExport.}:bool = false
   var invincibilityDuration {.gdExport.}:float64 = 1
 
+  signal invincibility_started()
+  signal invincibility_ended()
+
   method ready() =
     discard self.connect("area_entered", self, "on_area_entered")
     self.timer = self.get_node("Timer") as Timer
@@ -18,15 +21,18 @@ gdobj HurtArea of Area2D:
 
   proc startInvincibility(duration:float64 = 0.0) {.gdExport.} =
     if self.hasInvincibility:
-      var iduration:float64
-      if duration == 0.0:
-        iduration = self.invincibilityDuration
+      var iduration = if duration == 0.0:
+                        self.invincibilityDuration
+                      else:
+                        duration
 
       if not self.timer.isStopped():
         iduration = max(self.timer.timeLeft, iduration)
 
       self.timer.start(iduration)
       self.setDeferred("monitoring", false.toVariant)
+      self.emitSignal("invincibility_started")
 
   proc onTimeout() {.gdExport.} =
     self.monitoring = true
+    self.emitSignal("invincibility_ended")

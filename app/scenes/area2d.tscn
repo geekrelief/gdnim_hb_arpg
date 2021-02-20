@@ -5,3 +5,4 @@
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 
 [node name="Timer" type="Timer" parent="."]
+one_shot = true

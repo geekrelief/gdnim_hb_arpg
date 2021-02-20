@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=2]
+[gd_scene load_steps=25 format=2]
 
 [ext_resource path="res://_gdns/bat.gdns" type="Script" id=1]
 [ext_resource path="res://resources/Shadows/SmallShadow.png" type="Texture" id=2]
@@ -9,9 +9,15 @@
 [ext_resource path="res://_tscn/detection_zone.tscn" type="PackedScene" id=7]
 [ext_resource path="res://_tscn/damage.tscn" type="PackedScene" id=8]
 [ext_resource path="res://_tscn/soft_collisions.tscn" type="PackedScene" id=9]
+[ext_resource path="res://resources/WhiteColor.shader" type="Shader" id=10]
 
 [sub_resource type="CircleShape2D" id=1]
 radius = 4.0
+
+[sub_resource type="ShaderMaterial" id=12]
+resource_local_to_scene = true
+shader = ExtResource( 10 )
+shader_param/active = false
 
 [sub_resource type="AtlasTexture" id=2]
 atlas = ExtResource( 3 )
@@ -54,6 +60,39 @@ radius = 5.09902
 [sub_resource type="CircleShape2D" id=11]
 radius = 4.0
 
+[sub_resource type="Animation" id=13]
+resource_name = "Start"
+length = 0.2
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("AnimatedSprite:material:shader_param/active")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ true, false ]
+}
+
+[sub_resource type="Animation" id=14]
+resource_name = "Stop"
+length = 0.1
+tracks/0/type = "value"
+tracks/0/path = NodePath("AnimatedSprite:material:shader_param/active")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ false ]
+}
+
 [node name="Bat" type="KinematicBody2D"]
 collision_layer = 16
 script = ExtResource( 1 )
@@ -65,9 +104,10 @@ visible = false
 shape = SubResource( 1 )
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
+material = SubResource( 12 )
 frames = SubResource( 7 )
 animation = "Fly"
-frame = 2
+frame = 1
 playing = true
 offset = Vector2( 0, -12 )
 
@@ -79,6 +119,8 @@ visible = false
 collision_layer = 8
 collision_mask = 0
 script = ExtResource( 6 )
+has_invincibility = true
+invincibility_duration = 0.5
 
 [node name="CollisionShape2D" parent="HurtArea2D" index="0"]
 position = Vector2( 0, -10 )
@@ -109,6 +151,10 @@ shape = SubResource( 10 )
 
 [node name="CollisionShape2D" parent="SoftCollisions" index="0"]
 shape = SubResource( 11 )
+
+[node name="BlinkAnimationPlayer" type="AnimationPlayer" parent="."]
+anims/Start = SubResource( 13 )
+anims/Stop = SubResource( 14 )
 
 [editable path="HurtArea2D"]
 [editable path="DetectionZone"]

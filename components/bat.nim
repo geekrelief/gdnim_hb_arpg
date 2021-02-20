@@ -1,5 +1,4 @@
-import gdnim, godotapi / [kinematic_body_2d, area_2d, timer, animated_sprite]
-import strformat
+import gdnim, godotapi / [kinematic_body_2d, area_2d, timer, animated_sprite, animation_player]
 import random
 
 var vzero:Vector2
@@ -38,6 +37,8 @@ gdobj Bat of KinematicBody2D:
   var wanderRadius:float
   var startPos:Vector2
 
+  var blinkAnimationPlayer:AnimationPlayer
+
   proc hot_unload():seq[byte] {.gdExport.} =
     self.queue_free()
     save(self.position, self.startPos)
@@ -75,11 +76,16 @@ gdobj Bat of KinematicBody2D:
 
     self.deathEffectRes = loadScene("bat_death_effect")
     self.gameData = self.getTree().root.get_node("GameData")
-    discard self.get_node("HurtArea2D").connect("area_entered", self, "hurt_area_entered")
+    self.hurtArea = self.get_node("HurtArea2D")
+    discard self.hurtArea.connect("area_entered", self, "hurt_area_entered")
+    discard self.hurtArea.connect("invincibility_started", self, "on_invincibility_started")
+    discard self.hurtArea.connect("invincibility_ended", self, "on_invincibility_ended")
     self.sprite = self.get_node("AnimatedSprite") as AnimatedSprite
 
     randomize()
     self.worldSize = initRect2(0.0, 0.0, 320.0, 180.0)
+
+    self.blinkAnimationPlayer = self.get_node("BlinkAnimationPlayer") as AnimationPlayer
 
   method ready() =
     startPolling()
@@ -115,6 +121,7 @@ gdobj Bat of KinematicBody2D:
     self.hurtVector = asVector2(self.gameData.get_meta("input_vector")) * self.HitSpeed
     var damage = area.get_node("Damage").getImpl("amount")
     discard self.stats.call("dec_health", damage)
+    discard self.hurtArea.call("start_invincibility")
     self.state = FLEE
     self.modulate = initColor(1.0, 1.0, 0.0)
     asyncCheck self.asyncWander()
@@ -154,3 +161,9 @@ gdobj Bat of KinematicBody2D:
         if toStartPos.length > self.WanderRadius:
           while self.wanderVector.dot(toStartPos) < 0.0:
             self.wanderVector = vec2(rand(self.WanderRadius * 2), rand(self.WanderRadius * 2)) - vec2(self.WanderRadius, self.WanderRadius)
+
+  proc on_invincibility_started() {.gdExport.} =
+    self.blinkAnimationPlayer.play("Start")
+
+  proc on_invincibility_ended() {.gdExport.} =
+    self.blinkAnimationPlayer.play("Stop")
