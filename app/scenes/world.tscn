@@ -528,7 +528,7 @@ position = Vector2( 152, 64 )
 [node name="AnimationTree" parent="YSort/Player" index="4"]
 parameters/playback = SubResource( 50 )
 
-[node name="RemoteTransform2D" parent="YSort/Player" index="10"]
+[node name="PlayerRemoteTransform" parent="YSort/Player" index="10"]
 remote_path = NodePath("../../../Camera2D")
 
 [node name="Bushes" type="YSort" parent="YSort"]

@@ -1,4 +1,4 @@
-[gd_scene load_steps=61 format=2]
+[gd_scene load_steps=62 format=2]
 
 [ext_resource path="res://_gdns/player.gdns" type="Script" id=1]
 [ext_resource path="res://resources/Player/Player.png" type="Texture" id=2]
@@ -10,6 +10,7 @@
 [ext_resource path="res://resources/Music and Sounds/Swipe.wav" type="AudioStream" id=8]
 [ext_resource path="res://resources/Music and Sounds/Evade.wav" type="AudioStream" id=9]
 [ext_resource path="res://resources/WhiteColor.shader" type="Shader" id=10]
+[ext_resource path="res://_tscn/player_remote_transform.tscn" type="PackedScene" id=11]
 
 [sub_resource type="ShaderMaterial" id=1]
 shader = ExtResource( 10 )
@@ -840,7 +841,7 @@ position = Vector2( 0, -4 )
 shape = SubResource( 48 )
 
 [node name="Stats" parent="." instance=ExtResource( 6 )]
-max_health = 12
+max_health = 5
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 8 )
@@ -849,10 +850,14 @@ stream = ExtResource( 8 )
 anims/Start = SubResource( 49 )
 anims/Stop = SubResource( 50 )
 
-[node name="RemoteTransform2D" type="RemoteTransform2D" parent="."]
+[node name="PlayerRemoteTransform" parent="." instance=ExtResource( 11 )]
+can_shake = true
+max_shake_distance = 40.0
+noise_period = 0.2
 
 [connection signal="invincibility_ended" from="HurtArea2D" to="." method="on_invincibility_ended"]
 [connection signal="invincibility_started" from="HurtArea2D" to="." method="on_invincibility_started"]
+[connection signal="no_health" from="Stats" to="." method="on_no_health"]
 
 [editable path="HitBoxPiviot/SwordArea2D"]
 [editable path="HurtArea2D"]

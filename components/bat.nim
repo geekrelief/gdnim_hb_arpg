@@ -1,6 +1,7 @@
 import gdnim, godotapi / [kinematic_body_2d, area_2d, timer, animated_sprite, animation_player]
 import random
 
+randomize()
 var vzero:Vector2
 
 type
@@ -15,8 +16,6 @@ gdobj Bat of KinematicBody2D:
   var MaxSpeed {.gdExport.}:float = 150.0
   var PushAmount {.gdExport.}:float = 1000.0
   var WanderRadius {.gdExport.}:float = 100.0
-
-  var worldSize:Rect2
 
   var hurtArea:Node
   var hurtVector:Vector2
@@ -81,9 +80,6 @@ gdobj Bat of KinematicBody2D:
     discard self.hurtArea.connect("invincibility_started", self, "on_invincibility_started")
     discard self.hurtArea.connect("invincibility_ended", self, "on_invincibility_ended")
     self.sprite = self.get_node("AnimatedSprite") as AnimatedSprite
-
-    randomize()
-    self.worldSize = initRect2(0.0, 0.0, 320.0, 180.0)
 
     self.blinkAnimationPlayer = self.get_node("BlinkAnimationPlayer") as AnimationPlayer
 

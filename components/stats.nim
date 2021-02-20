@@ -35,3 +35,6 @@ gdobj Stats of Node:
     self.max_health = max(1, val)
     self.emitSignal("max_health_changed", self.max_health.toVariant)
     self.set_health(self.health)
+
+  proc get_trauma():float {.gdExport.} =
+    1.0 - float(self.health)/float(self.max_health)

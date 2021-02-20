@@ -43,7 +43,7 @@ gdobj Player of KinematicBody2D:
     save(self.position, self.inputVector, remotePath)
 
   method enter_tree() =
-    self.remoteTransform = self.get_node("RemoteTransform2D") as RemoteTransform2D
+    self.remoteTransform = self.get_node("PlayerRemoteTransform") as RemoteTransform2D
     var remotePath:string = $self.remoteTransform.remotePath
     register(player)?.load(self.position, self.inputVector, remotePath)
     register_dependencies(player, stats)
@@ -69,7 +69,6 @@ gdobj Player of KinematicBody2D:
           self.stats = nil
         else:
           self.stats = self.get_node("Stats") as Node
-          discard self.stats.connect("no_health", self, "on_no_health")
 
   method physics_process(delta: float64) =
     self.update_input()
@@ -129,14 +128,14 @@ gdobj Player of KinematicBody2D:
   proc on_hurt_area_entered(area:Area2D) {.gdExport.} =
     var damage = area.get_node("Damage").getImpl("amount")
     discard self.stats.call("dec_health", damage)
-
+    discard self.remoteTransform.call("shake", self.stats.call("get_trauma"))
 
   proc on_no_health() {.gdExport.} =
     self.queueFree()
     var deathSound = gdnew[AudioStreamPlayer]()
     deathSound.stream = resource_loader.load("res://resources/Music and Sounds/Hurt.wav") as AudioStream
     deathSound.autoplay = true
-    discard deathSound.connect("finished", deathSound, "queue_free", flags = CONNECT_ONESHOT)
+    discard deathSound.connect("finished", deathSound, "queue_free")
     self.getTree().root.addChild(deathSound)
 
   proc onInvincibilityStarted() {.gdExport.} =
