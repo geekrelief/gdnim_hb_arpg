@@ -14,50 +14,50 @@
 [sub_resource type="CircleShape2D" id=1]
 radius = 4.0
 
-[sub_resource type="ShaderMaterial" id=12]
+[sub_resource type="ShaderMaterial" id=2]
 resource_local_to_scene = true
 shader = ExtResource( 10 )
 shader_param/active = false
 
-[sub_resource type="AtlasTexture" id=2]
+[sub_resource type="AtlasTexture" id=3]
 atlas = ExtResource( 3 )
 region = Rect2( 0, 0, 16, 24 )
 
-[sub_resource type="AtlasTexture" id=3]
+[sub_resource type="AtlasTexture" id=4]
 atlas = ExtResource( 3 )
 region = Rect2( 16, 0, 16, 24 )
 
-[sub_resource type="AtlasTexture" id=4]
+[sub_resource type="AtlasTexture" id=5]
 atlas = ExtResource( 3 )
 region = Rect2( 32, 0, 16, 24 )
 
-[sub_resource type="AtlasTexture" id=5]
+[sub_resource type="AtlasTexture" id=6]
 atlas = ExtResource( 3 )
 region = Rect2( 48, 0, 16, 24 )
 
-[sub_resource type="AtlasTexture" id=6]
+[sub_resource type="AtlasTexture" id=7]
 atlas = ExtResource( 3 )
 region = Rect2( 64, 0, 16, 24 )
 
-[sub_resource type="SpriteFrames" id=7]
+[sub_resource type="SpriteFrames" id=8]
 animations = [ {
-"frames": [ SubResource( 2 ), SubResource( 3 ), SubResource( 4 ), SubResource( 5 ), SubResource( 6 ) ],
+"frames": [ SubResource( 3 ), SubResource( 4 ), SubResource( 5 ), SubResource( 6 ), SubResource( 7 ) ],
 "loop": true,
 "name": "Fly",
 "speed": 10.0
 } ]
 
-[sub_resource type="CapsuleShape2D" id=8]
+[sub_resource type="CapsuleShape2D" id=9]
 radius = 6.0
 height = 12.0
 
-[sub_resource type="CircleShape2D" id=9]
+[sub_resource type="CircleShape2D" id=10]
 radius = 57.0088
 
-[sub_resource type="CircleShape2D" id=10]
+[sub_resource type="CircleShape2D" id=11]
 radius = 5.09902
 
-[sub_resource type="CircleShape2D" id=11]
+[sub_resource type="CircleShape2D" id=12]
 radius = 4.0
 
 [sub_resource type="Animation" id=13]
@@ -104,8 +104,8 @@ visible = false
 shape = SubResource( 1 )
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
-material = SubResource( 12 )
-frames = SubResource( 7 )
+material = SubResource( 2 )
+frames = SubResource( 8 )
 animation = "Fly"
 frame = 1
 playing = true
@@ -124,7 +124,7 @@ invincibility_duration = 0.5
 
 [node name="CollisionShape2D" parent="HurtArea2D" index="0"]
 position = Vector2( 0, -10 )
-shape = SubResource( 8 )
+shape = SubResource( 9 )
 
 [node name="Stats" parent="." instance=ExtResource( 5 )]
 max_health = 2
@@ -134,7 +134,7 @@ modulate = Color( 1, 1, 1, 0.537255 )
 show_behind_parent = true
 
 [node name="CollisionShape2D" parent="DetectionZone" index="0"]
-shape = SubResource( 9 )
+shape = SubResource( 10 )
 
 [node name="HitArea2D" parent="." instance=ExtResource( 4 )]
 visible = false
@@ -143,14 +143,14 @@ collision_layer = 0
 collision_mask = 4
 
 [node name="CollisionShape2D" parent="HitArea2D" index="0"]
-shape = SubResource( 10 )
+shape = SubResource( 11 )
 
 [node name="Damage" parent="HitArea2D" instance=ExtResource( 8 )]
 
 [node name="SoftCollisions" parent="." instance=ExtResource( 9 )]
 
 [node name="CollisionShape2D" parent="SoftCollisions" index="0"]
-shape = SubResource( 11 )
+shape = SubResource( 12 )
 
 [node name="BlinkAnimationPlayer" type="AnimationPlayer" parent="."]
 anims/Start = SubResource( 13 )
