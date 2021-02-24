@@ -1,4 +1,4 @@
-import gdnim, godotapi / [kinematic_body_2d, area_2d, timer, animated_sprite, animation_player]
+import gdnim
 import random
 
 randomize()
@@ -8,7 +8,8 @@ type
   BatState = enum
     IDLE, WANDER, CHASE, FLEE
 
-gdobj Bat of KinematicBody2D:
+gdnim Bat of KinematicBody2D:
+  godotapi Area2D
 
   var HitSpeed {.gdExport.}:float = 130.0
   var Friction {.gdExport.}:float = 800.0
@@ -38,41 +39,26 @@ gdobj Bat of KinematicBody2D:
 
   var blinkAnimationPlayer:AnimationPlayer
 
-  proc hot_unload():seq[byte] {.gdExport.} =
-    self.queue_free()
+  unload:
     save(self.position, self.startPos)
 
-  proc hot_depreload(compName:string, isUnloading:bool = false) {.gdExport.} =
-    case compName:
-    of "stats":
-      if isUnloading:
-        self.stats = nil
-      else:
-        self.stats = self.get_node("Stats")
-        discard self.stats.connect("no_health", self, "on_stats_no_health")
-    of "detection_zone":
-      if isUnloading:
-        self.detectionZone = nil
-      else:
-        self.detectionZone = self.get_node("DetectionZone")
-        discard self.detectionZone.connect("player_found", self, "on_player_found")
-        discard self.detectionZone.connect("player_lost", self, "on_player_lost")
-    of "soft_collisions":
-      if isUnloading:
-        self.soft_collision = nil
-      else:
+  reload:
+    self.startPos = self.globalPosition
+    load(self.position, self.startPos)
+    self.globalPosition = self.startPos
+
+  dependencies:
+    stats:
+      self.stats = self.get_node("Stats")
+      discard self.stats.connect("no_health", self, "on_stats_no_health")
+    detection_zone:
+      self.detectionZone = self.get_node("DetectionZone")
+      discard self.detectionZone.connect("player_found", self, "on_player_found")
+      discard self.detectionZone.connect("player_lost", self, "on_player_lost")
+    soft_collisions:
         self.softCollision = self.get_node("SoftCollisions")
 
   method enter_tree() =
-    self.startPos = self.globalPosition
-    register(bat)?.load(self.position, self.startPos)
-    self.globalPosition = self.startPos
-    register_dependencies(bat, stats, detection_zone, soft_collisions)
-
-    self.hot_depreload("stats")
-    self.hot_depreload("detection_zone")
-    self.hot_depreload("soft_collisions")
-
     self.deathEffectRes = loadScene("bat_death_effect")
     self.gameData = self.getTree().root.get_node("GameData")
     self.hurtArea = self.get_node("HurtArea2D")

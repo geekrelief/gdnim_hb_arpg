@@ -1,10 +1,5 @@
-import gdnim, godotapi / [
-  kinematic_body_2d,
-  input, animation_player,
-  animation_tree, animation_node_state_machine_playback,
-  remote_transform_2d,
-  audio_stream_player, resource_loader
-  ],
+import gdnim,
+  godotapi / [ kinematic_body_2d, input, audio_stream_player ],
   strformat
 
 var vzero:Vector2
@@ -15,7 +10,7 @@ type
     ROLL,
     ATTACK
 
-gdobj Player of KinematicBody2D:
+gdnim Player of KinematicBody2D:
   var max_speed {.gdExport.}:float = 150.0
   var roll_max_speed {.gdExport.}:float = 150 * 1.5
   var acceleration {.gdExport.}:float = 1000.0
@@ -27,7 +22,7 @@ gdobj Player of KinematicBody2D:
   var state:PlayerState = MOVE
   var velocity:Vector2
   var inputVector:Vector2
-  var animationPlayer:AnimationPlayer
+
   var animationTree:AnimationTree
   var animationState:AnimationNodeStateMachinePlayback
 
@@ -37,38 +32,31 @@ gdobj Player of KinematicBody2D:
   var hurtArea:Area2D
   var stats:Node
 
-  proc hot_unload():seq[byte] {.gdExport.} =
-    self.queue_free()
+  unload:
     var remotePath = $self.remoteTransform.remotePath
     save(self.position, self.inputVector, remotePath)
 
-  method enter_tree() =
+  reload:
     self.remoteTransform = self.get_node("PlayerRemoteTransform") as RemoteTransform2D
     var remotePath:string = $self.remoteTransform.remotePath
-    register(player)?.load(self.position, self.inputVector, remotePath)
-    register_dependencies(player, stats)
-    self.hot_depreload("stats", false)
+    load(self.position, self.inputVector, remotePath)
+    self.remoteTransform.remotePath = NodePath(remotePath)
+
+  dependencies:
+    stats:
+      self.stats = self.get_node("Stats") as Node
+
+  method enter_tree() =
     self.hurtArea = self.get_node("HurtArea2D") as Area2D
     discard self.hurtArea.connect("area_entered", self, "on_hurt_area_entered")
 
     self.gameData = self.getTree().root.getNode("GameData")
     self.gameData.setImpl("input_vector", vzero.toVariant)
-    self.animationPlayer = self.get_node("AnimationPlayer") as AnimationPlayer
     self.animationTree = self.get_node("AnimationTree") as AnimationTree
     self.animationTree.active = true
     self.animationState = asObject[AnimationNodeStateMachinePlayback](self.animationTree.getImpl("parameters/playback"))
 
-    self.remoteTransform.remotePath = NodePath(remotePath)
-
     self.blinkAnimationPlayer = self.get_node("BlinkAnimationPlayer") as AnimationPlayer
-
-  proc hot_depreload(compName:string, isUnloading:bool) {.gdExport.} =
-    case compName:
-      of "stats":
-        if isUnloading:
-          self.stats = nil
-        else:
-          self.stats = self.get_node("Stats") as Node
 
   method physics_process(delta: float64) =
     self.update_input()
@@ -133,7 +121,7 @@ gdobj Player of KinematicBody2D:
   proc on_no_health() {.gdExport.} =
     self.queueFree()
     var deathSound = gdnew[AudioStreamPlayer]()
-    deathSound.stream = resource_loader.load("res://resources/Music and Sounds/Hurt.wav") as AudioStream
+    deathSound.stream = load("res://resources/Music and Sounds/Hurt.wav") as AudioStream
     deathSound.autoplay = true
     discard deathSound.connect("finished", deathSound, "queue_free")
     self.getTree().root.addChild(deathSound)

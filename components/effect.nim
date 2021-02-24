@@ -1,6 +1,6 @@
-import gdnim, godotapi / [animated_sprite]
+import gdnim
 
-gdobj Effect of AnimatedSprite:
+gdnim Effect of AnimatedSprite:
 
   method enter_tree() =
     self.play("Animate")

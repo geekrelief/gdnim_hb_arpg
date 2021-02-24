@@ -1,6 +1,6 @@
-import gdnim, godotapi / [area_2d, animated_sprite, timer]
+import gdnim
 
-gdobj HurtArea of Area2D:
+gdnim HurtArea of Area2D:
   var timer:Timer
   var hasInvincibility {.gdExport.}:bool = false
   var invincibilityDuration {.gdExport.}:float64 = 1

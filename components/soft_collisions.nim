@@ -1,13 +1,6 @@
-import gdnim, godotapi / [area_2d]
+import gdnim
 
-gdobj SoftCollisions of Area2D:
-
-  proc hot_unload():seq[byte] {.gdExport.} =
-    self.queue_free()
-    #save()
-
-  method enter_tree() =
-    .= register(soft_collisions)#?.load()
+gdnim SoftCollisions of Area2D:
 
   proc is_colliding():bool {.gdExport.} =
     var areas = self.getOverlappingAreas()

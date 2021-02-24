@@ -1,10 +1,9 @@
-import gdnim, godotapi / [control]
-import strformat
+import gdnim
 
 const HeartWidth:float = 15
 const HeartHeight:float = 11
 
-gdobj HealthUi of Control:
+gdnim HealthUi of Control:
   var playerStatsPath {.gdExport.}:NodePath
   var max_hearts {.gdExport, set:"set_max_hearts".}:int = 4
   var hearts {.gdExport, set:"set_hearts".}:int
@@ -12,24 +11,24 @@ gdobj HealthUi of Control:
   var uiEmpty:Control
   var uiFull:Control
 
-  proc hot_unload():seq[byte] {.gdExport.} =
-    self.queue_free()
+  unload:
     var path = $self.playerStatsPath
     save(path)
 
-  method enter_tree() =
+  reload:
     var path:string
-    register(health_ui)?.load(path)
+    load(path)
     if path != "":
       self.playerStatsPath = NodePath(path)
 
+  method ready() =
     self.uiEmpty = self.get_node("HeartsEmpty") as Control
     self.uiFull = self.get_node("HeartsFull") as Control
     self.set_hearts(self.max_hearts)
     self.set_hearts(self.hearts)
     var playerStats = self.get_node(self.playerStatsPath)
-    .= playerStats.connect("health_changed", self, "set_hearts")
-    .= playerStats.connect("max_health_changed", self, "set_max_hearts")
+    discard playerStats.connect("health_changed", self, "set_hearts")
+    discard playerStats.connect("max_health_changed", self, "set_max_hearts")
 
   proc set_max_hearts(val:int) {.gdExport.} =
     self.max_hearts = max(1, val)

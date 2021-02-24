@@ -107,7 +107,7 @@ shape = SubResource( 1 )
 material = SubResource( 2 )
 frames = SubResource( 8 )
 animation = "Fly"
-frame = 1
+frame = 2
 playing = true
 offset = Vector2( 0, -12 )
 

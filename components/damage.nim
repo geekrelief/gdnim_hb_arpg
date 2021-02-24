@@ -1,11 +1,4 @@
-import gdnim, godotapi / [node]
+import gdnim
 
-gdobj Damage of Node:
+gdnim Damage of Node:
   var amount {.gdExport.}:int = 1
-
-  proc hot_unload():seq[byte] {.gdExport.} =
-    self.queue_free()
-    #save()
-
-  method enter_tree() =
-    discard register(damage)#?.load()

@@ -1,7 +1,6 @@
-import gdnim, godotapi / [node]
-import strformat
+import gdnim
 
-gdobj Stats of Node:
+gdnim Stats of Node:
 
   var max_health {.gdExport.}:int = 1
   var health:int
@@ -9,13 +8,6 @@ gdobj Stats of Node:
   signal no_health()
   signal health_changed(val:int)
   signal max_health_changed(val:int)
-
-  proc hot_unload():seq[byte] {.gdExport.} =
-    self.queue_free()
-    #save()
-
-  method enter_tree() =
-    discard register(stats)#?.load()
 
   method ready() =
     self.set_max_health(self.max_health)
@@ -34,7 +26,6 @@ gdobj Stats of Node:
   proc set_max_health(val:int) {.gdExport.} =
     self.max_health = max(1, val)
     self.emitSignal("max_health_changed", self.max_health.toVariant)
-    self.set_health(self.health)
 
   proc get_trauma():float {.gdExport.} =
     1.0 - float(self.health)/float(self.max_health)

@@ -1,15 +1,17 @@
-import gdnim, godotapi / [node_2d, input, packed_scene, resource_loader, area_2d]
+import gdnim
 
-gdobj Grass of Node2D:
+gdnim Grass of Node2D:
+  godotapi Area2D
 
   var grassEffectRes:PackedScene
 
-  proc hot_unload():seq[byte] {.gdExport.} =
-    self.queue_free()
+  unload:
     save(self.position)
 
+  reload:
+    load(self.position)
+
   method enter_tree() =
-    register(grass)?.load(self.position)
     self.grassEffectRes = loadScene("grass_effect")
     discard self.get_node("Area2D").connect("area_entered", self, "cut_grass")
 

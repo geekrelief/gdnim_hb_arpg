@@ -1,9 +1,8 @@
-import gdnim, godotapi / [remote_transform_2d, open_simplex_noise, timer]
-import random, math
+import gdnim
+import random
 randomize()
 
-gdobj PlayerRemoteTransform of RemoteTransform2D:
-
+gdnim PlayerRemoteTransform of RemoteTransform2D:
   var canShake {.gdExport.}:bool
   var maxShakeDistance {.gdExport.}:float = 10.0
   var maxShakeDuration {.gdExport.}:float = 1.0
@@ -17,12 +16,7 @@ gdobj PlayerRemoteTransform of RemoteTransform2D:
   var timer:Timer
   var noise:OpenSimplexNoise
 
-  proc hot_unload():seq[byte] {.gdExport.} =
-    self.queue_free()
-    #save()
-
   method enter_tree() =
-    discard register(player_remote_transform)#?.load()
     self.timer = self.get_node("Timer") as Timer
     discard self.timer.connect("timeout", self, "on_shaking_ended")
     self.noise = gdnew[OpenSimplexNoise]()
@@ -33,7 +27,6 @@ gdobj PlayerRemoteTransform of RemoteTransform2D:
 
   method physics_process(delta:float64) =
     if self.canShake and self.isShaking:
-
       var nx = self.noise.getNoise1D(self.noisePos) * self.trauma * self.maxShakeDistance
       self.noisePos += 0.1
       var ny = self.noise.getNoise1D(self.noisePos) * self.trauma * self.maxShakeDistance

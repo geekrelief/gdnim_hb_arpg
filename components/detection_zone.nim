@@ -1,16 +1,12 @@
-import gdnim, godotapi / [area_2d]
+import gdnim
 import strformat
 
-gdobj DetectionZone of Area2D:
+gdnim DetectionZone of Area2D:
 
   signal playerFound(player:Node)
   signal playerLost()
 
-  proc hot_unload():seq[byte] {.gdExport.} =
-    self.queue_free()
-
   method enter_tree() =
-    discard register(detection_zone)
     discard self.connect("body_entered", self,  "on_body_entered")
     discard self.connect("body_exited", self, "on_body_exited")
 
