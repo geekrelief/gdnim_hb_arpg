@@ -6,8 +6,7 @@ gdnim HurtArea of Area2D:
     hasInvincibility {.gdExport.}:bool = false
     invincibilityDuration {.gdExport.}:float64 = 1
 
-  signal invincibility_started()
-  signal invincibility_ended()
+  signal invincibility_started(), invincibility_ended()
 
   method ready() =
     discard self.connect("area_entered", self, "on_area_entered")

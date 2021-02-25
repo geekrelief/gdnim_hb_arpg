@@ -6,9 +6,10 @@ gdnim Stats of Node:
     max_health {.gdExport.}:int = 1
     health:int
 
-  signal no_health()
-  signal health_changed(val:int)
-  signal max_health_changed(val:int)
+  signal:
+    no_health()
+    health_changed(val:int)
+    max_health_changed(val:int)
 
   method ready() =
     self.set_max_health(self.max_health)

@@ -3,8 +3,9 @@ import strformat
 
 gdnim DetectionZone of Area2D:
 
-  signal playerFound(player:Node)
-  signal playerLost()
+  signal:
+    playerFound(player:Node)
+    playerLost()
 
   method enter_tree() =
     discard self.connect("body_entered", self,  "on_body_entered")
