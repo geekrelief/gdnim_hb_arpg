@@ -4,12 +4,12 @@ const HeartWidth:float = 15
 const HeartHeight:float = 11
 
 gdnim HealthUi of Control:
-  var playerStatsPath {.gdExport.}:NodePath
-  var max_hearts {.gdExport, set:"set_max_hearts".}:int = 4
-  var hearts {.gdExport, set:"set_hearts".}:int
-
-  var uiEmpty:Control
-  var uiFull:Control
+  var
+    playerStatsPath {.gdExport.}:NodePath
+    max_hearts {.gdExport, set:"set_max_hearts".}:int = 4
+    hearts {.gdExport, set:"set_hearts".}:int
+    uiEmpty:Control
+    uiFull:Control
 
   unload:
     var path = $self.playerStatsPath

@@ -10,26 +10,26 @@ type
     ATTACK
 
 gdnim Player of KinematicBody2D:
-  var max_speed {.gdExport.}:float = 150.0
-  var roll_max_speed {.gdExport.}:float = 150 * 1.5
-  var acceleration {.gdExport.}:float = 1000.0
-  var friction {.gdExport.}:float = 1100.0
+  var
+    max_speed {.gdExport.}:float = 150.0
+    roll_max_speed {.gdExport.}:float = 150 * 1.5
+    acceleration {.gdExport.}:float = 1000.0
+    friction {.gdExport.}:float = 1100.0
 
-  var roll_invincibility_duration:float = 0.2
+    roll_invincibility_duration:float = 0.2
+    gameData:Node
+    state:PlayerState = MOVE
+    velocity:Vector2
+    inputVector:Vector2
 
-  var gameData:Node
-  var state:PlayerState = MOVE
-  var velocity:Vector2
-  var inputVector:Vector2
+    animationTree:AnimationTree
+    animationState:AnimationNodeStateMachinePlayback
 
-  var animationTree:AnimationTree
-  var animationState:AnimationNodeStateMachinePlayback
+    remoteTransform:RemoteTransform2D
+    blinkAnimationPlayer:AnimationPlayer
 
-  var remoteTransform:RemoteTransform2D
-  var blinkAnimationPlayer:AnimationPlayer
-
-  var hurtArea:Area2D
-  var stats:Node
+    hurtArea:Area2D
+    stats:Node
 
   unload:
     save(self.position, self.inputVector, $self.remoteTransform.remotePath)

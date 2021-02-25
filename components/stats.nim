@@ -2,8 +2,9 @@ import gdnim
 
 gdnim Stats of Node:
 
-  var max_health {.gdExport.}:int = 1
-  var health:int
+  var
+    max_health {.gdExport.}:int = 1
+    health:int
 
   signal no_health()
   signal health_changed(val:int)

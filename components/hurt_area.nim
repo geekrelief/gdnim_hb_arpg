@@ -1,9 +1,10 @@
 import gdnim
 
 gdnim HurtArea of Area2D:
-  var timer:Timer
-  var hasInvincibility {.gdExport.}:bool = false
-  var invincibilityDuration {.gdExport.}:float64 = 1
+  var
+    timer:Timer
+    hasInvincibility {.gdExport.}:bool = false
+    invincibilityDuration {.gdExport.}:float64 = 1
 
   signal invincibility_started()
   signal invincibility_ended()

@@ -11,33 +11,34 @@ type
 gdnim Bat of KinematicBody2D:
   godotapi Area2D
 
-  var HitSpeed {.gdExport.}:float = 130.0
-  var Friction {.gdExport.}:float = 800.0
-  var Acceleration {.gdExport.}:float = 350.0
-  var MaxSpeed {.gdExport.}:float = 150.0
-  var PushAmount {.gdExport.}:float = 1000.0
-  var WanderRadius {.gdExport.}:float = 100.0
+  var
+    HitSpeed {.gdExport.}:float = 130.0
+    Friction {.gdExport.}:float = 800.0
+    Acceleration {.gdExport.}:float = 350.0
+    MaxSpeed {.gdExport.}:float = 150.0
+    PushAmount {.gdExport.}:float = 1000.0
+    WanderRadius {.gdExport.}:float = 100.0
 
-  var hurtArea:Node
-  var hurtVector:Vector2
-  var gameData:Node
-  var stats:Node
-  var deathEffectRes:PackedScene
+    hurtArea:Node
+    hurtVector:Vector2
+    gameData:Node
+    stats:Node
+    deathEffectRes:PackedScene
 
-  var detectionZone:Node
-  var state:BatState = IDLE
-  var velocity:Vector2
-  var playerTarget:Node2D
-  var sprite:AnimatedSprite
+    detectionZone:Node
+    state:BatState = IDLE
+    velocity:Vector2
+    playerTarget:Node2D
+    sprite:AnimatedSprite
 
-  var idleTimer:Timer
+    idleTimer:Timer
 
-  var softCollision:Node
-  var wanderVector:Vector2
-  var wanderRadius:float
-  var startPos:Vector2
+    softCollision:Node
+    wanderVector:Vector2
+    wanderRadius:float
+    startPos:Vector2
 
-  var blinkAnimationPlayer:AnimationPlayer
+    blinkAnimationPlayer:AnimationPlayer
 
   unload:
     save(self.position, self.startPos)
