@@ -1,6 +1,5 @@
 import gdnim,
-  godotapi / [ kinematic_body_2d, input, audio_stream_player ],
-  strformat
+  godotapi / [ kinematic_body_2d, input, audio_stream_player ]
 
 var vzero:Vector2
 
@@ -33,14 +32,13 @@ gdnim Player of KinematicBody2D:
   var stats:Node
 
   unload:
-    var remotePath = $self.remoteTransform.remotePath
-    save(self.position, self.inputVector, remotePath)
+    save(self.position, self.inputVector, $self.remoteTransform.remotePath)
 
   reload:
     self.remoteTransform = self.get_node("PlayerRemoteTransform") as RemoteTransform2D
     var remotePath:string = $self.remoteTransform.remotePath
     load(self.position, self.inputVector, remotePath)
-    self.remoteTransform.remotePath = NodePath(remotePath)
+    self.remoteTransform.remotePath = remotePath
 
   dependencies:
     stats:
