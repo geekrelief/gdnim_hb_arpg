@@ -57,13 +57,16 @@ macro load*(data:typed, args: varargs[untyped]):untyped =
   when defined(does_reload):
     result = newStmtList()
     for arg in args:
-      var isAssign = newLit(if arg.kind == nnkPrefix and arg[0].repr == "!": false else: true)
+      let isAssign = if arg.kind == nnkPrefix and arg[0].repr == "!": false else: true
+      var isAssignNode = newLit(isAssign)
+      var argNode:NimNode = if isAssign: arg else: arg[1]
       var unpackVar:NimNode = genSym(nskVar)
+
       result.add quote do:
-        createArgVar(`unpackVar`, `arg`)
+        createArgVar(`unpackVar`, `argNode`)
         `data`.unpack(`unpackVar`)
-        if `isAssign`:
-          `arg` = `unpackVar`
+        if `isAssignNode`:
+          `argNode` = `unpackVar`
   else:
     discard
 
@@ -403,8 +406,7 @@ macro gdnim*(ast:varargs[untyped]) =
         case node.kind:
           of nnkCall:
             if node[0] == ^"load":
-              reloadBody.add quote do:
-                `dataIdent`?.`node`
+              reloadBody.add nnkInfix.newTree(^"?.", dataIdent, node)
             else:
               reloadBody.add node
           else:
