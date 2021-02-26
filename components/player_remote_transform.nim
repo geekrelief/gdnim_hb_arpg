@@ -16,7 +16,7 @@ gdnim PlayerRemoteTransform of RemoteTransform2D:
   var timer:Timer
   var noise:OpenSimplexNoise
 
-  method enter_tree() =
+  method ready() =
     self.timer = self.get_node("Timer") as Timer
     discard self.timer.connect("timeout", self, "on_shaking_ended")
     self.noise = gdnew[OpenSimplexNoise]()

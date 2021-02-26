@@ -7,7 +7,7 @@ gdnim DetectionZone of Area2D:
     playerFound(player:Node)
     playerLost()
 
-  method enter_tree() =
+  method ready() =
     discard self.connect("body_entered", self,  "on_body_entered")
     discard self.connect("body_exited", self, "on_body_exited")
 

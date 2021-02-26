@@ -21,9 +21,15 @@ gdnim Stats of Node:
     if self.health <= 0:
       self.emitSignal("no_health")
 
+  proc get_health():int {.gdExport.} =
+    self.health
+
   proc set_health(val:int) {.gdExport.} =
     self.health = clamp(val, 0, self.max_health)
     self.emitSignal("health_changed", self.health.toVariant)
+
+  proc get_max_health():int {.gdExport.} =
+    self.max_health
 
   proc set_max_health(val:int) {.gdExport.} =
     self.max_health = max(1, val)

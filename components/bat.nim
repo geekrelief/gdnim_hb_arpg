@@ -59,7 +59,7 @@ gdnim Bat of KinematicBody2D:
     soft_collisions:
         self.softCollision = self.get_node("SoftCollisions")
 
-  method enter_tree() =
+  method ready() =
     self.deathEffectRes = loadScene("bat_death_effect")
     self.gameData = self.getTree().root.get_node("GameData")
     self.hurtArea = self.get_node("HurtArea2D")
@@ -70,7 +70,6 @@ gdnim Bat of KinematicBody2D:
 
     self.blinkAnimationPlayer = self.get_node("BlinkAnimationPlayer") as AnimationPlayer
 
-  method ready() =
     startPolling()
     asyncCheck self.asyncIdle()
 

@@ -11,7 +11,7 @@ gdnim Grass of Node2D:
   reload:
     load(self.position)
 
-  method enter_tree() =
+  method ready() =
     self.grassEffectRes = loadScene("grass_effect")
     discard self.get_node("Area2D").connect("area_entered", self, "cut_grass")
 

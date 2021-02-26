@@ -32,19 +32,22 @@ gdnim Player of KinematicBody2D:
     stats:Node
 
   unload:
-    save(self.position, self.inputVector, $self.remoteTransform.remotePath)
+    var health = self.stats.call("get_health").asInt
+    save(self.position, self.inputVector, $self.remoteTransform.remotePath, health)
 
   reload:
     self.remoteTransform = self.get_node("PlayerRemoteTransform") as RemoteTransform2D
     var remotePath:string = $self.remoteTransform.remotePath
-    load(self.position, self.inputVector, remotePath)
+    var health = self.stats.call("get_health").asInt
+    load(self.position, self.inputVector, remotePath, health)
     self.remoteTransform.remotePath = remotePath
+    discard self.stats.call("set_health", health.toVariant)
 
   dependencies:
     stats:
       self.stats = self.get_node("Stats") as Node
 
-  method enter_tree() =
+  method ready() =
     self.hurtArea = self.get_node("HurtArea2D") as Area2D
     discard self.hurtArea.connect("area_entered", self, "on_hurt_area_entered")
 
