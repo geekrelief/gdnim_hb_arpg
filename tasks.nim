@@ -1,3 +1,5 @@
+# nim says anycase is unused, but pascal and snake are from anycase
+{.push warning[UnusedImport]:off.}
 from sequtils import toSeq, filter, mapIt
 import anycase, threadpool
 
@@ -16,6 +18,18 @@ gdnim $2 of $3:
 const tool_nim_template = """
 import godot, godotapi / [editor_plugin, resource_loader]
 
+#[
+WARNING: GDNative reloading of tool scripts is broken.
+If you enable and disable the plugin, or unfocus the editor window while
+the plugin is enabled which will cause the plugin to reload, you might
+get a crash. You also might get warnings about leaked resources, when the
+plugin is enabled while the editor is closed.
+
+As a workaround, gdnlib's reloadable flag is set to false, so the
+plugin will not reload when the editor is unfocused. To see your
+changes, close the editor and reopen after compilation.
+]#
+
 gdobj($2 of EditorPlugin, tool):
 
   method enter_tree() =
@@ -28,18 +42,43 @@ gdobj($2 of EditorPlugin, tool):
 const gdns_template = """
 [gd_resource type="NativeScript" load_steps=2 format=2]
 
-[sub_resource type="GDNativeLibrary" id=1]
-entry/Windows.64 = "res://$3/$1.dll"
-dependency/Windows.64 = [  ]
-entry/X11.64 = "res://$3/$1.so"
-dependency/X11.64 = [  ]
-entry/OSX.64 = "res://$3/$1.dylib"
-dependency/OSX.64 = [  ]
+[ext_resource path="res://$3/$1.gdnlib" type="GDNativeLibrary" id=1]
 
 [resource]
 resource_name = "$2"
 class_name = "$2"
-library = SubResource( 1 )
+library = ExtResource( 1 )
+"""
+
+const gdnlib_template = """
+[general]
+
+singleton=false
+load_once=true
+symbol_prefix="godot_"
+reloadable=$4
+
+[entry]
+
+Android.arm64-v8a="res://$3/lib$1.so"
+Android.armeabi="res://$3/lib$1.so"
+Android.armeabi-v7a="res://$3/lib$1.so"
+Android.x86="res://$3/lib$1.so"
+Android.x86_64="res://$3/lib$1.so"
+Windows.64 = "res://$3/$1.dll"
+X11.64 = "res://$3/lib$1.so"
+OSX.64 = "res://$3/$1.dylib"
+
+[dependencies]
+
+Android.arm64-v8a=[  ]
+Android.armeabi=[  ]
+Android.armeabi-v7a=[  ]
+Android.x86=[  ]
+Android.x86_64=[  ]
+Windows.64=[  ]
+X11.64=[  ]
+OSX.64=[  ]
 """
 
 const tscn_template = """
@@ -72,6 +111,7 @@ let gdpathFlags = &"--path:gdnim --path:{depsDir} --path:{depsDir}/{depsGodotDir
 let baseDllDir = config.getSectionValue("App", "dll")
 let dllDir = appDir / baseDllDir
 let gdnsDir = appDir / config.getSectionValue("App", "gdns")
+let gdnlibDir = appDir / config.getSectionValue("App", "gdnlib")
 let tscnDir = appDir / config.getSectionValue("App", "tscn")
 
 let gd_src = config.getSectionValue("Godot", "src")
@@ -79,6 +119,7 @@ let gd_base_branch = config.getSectionValue("Godot", "base_branch")
 let gd_build_branch = config.getSectionValue("Godot", "build_branch")
 let gd_branches = config.getSectionValue("Godot", "merge_branches").split(",")
 let gd_platform = config.getSectionValue("Godot", "platform")
+#let gd_arch = config.getSectionValue("Godot", "arch")
 let gd_bits = config.getSectionValue("Godot", "bits")
 #let gd_bin = config.getSectionValue("Godot", "bin")
 let gd_tools_debug_bin = config.getSectionValue("Godot", "tools_debug_bin")
@@ -87,24 +128,37 @@ let gd_tools_release_bin = config.getSectionValue("Godot", "tools_release_bin")
 var cwatch_interval = parseInt(config.getSectionValue("Build", "cwatch_interval"))
 if cwatch_interval == 0: cwatch_interval = 300
 
-let dllExt = case hostOS
+let dllPrefix = case gd_platform
+                  of "android", "linuxbsd", "x11": "lib"
+                  else: ""
+
+let dllExt = case gd_platform
                of "windows": "dll"
-               of "linux": "so"
+               of "android", "linuxbsd", "x11": "so"
                of "macosx": "dylib"
                else: "unknown"
 
-proc genGdns(name:string) =
+proc genGdns(name:string, isTool:bool = false) =
   var comp = &"{compsDir}/{name}.nim"
   var gdns = &"{gdnsDir}/{name}.gdns"
+  var gdnlib = &"{gdnlibDir}/{name}.gdnlib"
   if not fileExists(comp):
     comp = &"{compsDir}/tools/{name}.nim"
     gdns = &"{appDir}/addons/{name}/{name}.gdns"
+    gdnlib = &"{appDir}/addons/{name}/{name}.gdnlib"
 
-  if fileExists(comp) and not fileExists(gdns):
-    var f = open(gdns, fmWrite)
-    f.write(gdns_template % [name, name.pascal, relativePath(dllDir, appDir)])
-    f.close()
-    echo &"generated {gdns}"
+  if fileExists(comp):
+    if not fileExists(gdns):
+      var f = open(gdns, fmWrite)
+      f.write(gdns_template % [name, name.pascal, relativePath(parentDir(gdnlib), appDir)])
+      f.close()
+      echo &"generated {gdns}"
+    if not fileExists(gdnlib):
+      var f = open(gdnlib, fmWrite)
+      var reloadable = not isTool
+      f.write(gdnlib_template % [name, name.pascal, relativePath(dllDir, appDir), $reloadable])
+      f.close()
+      echo &"generated {gdnlib}"
 
 proc execOrQuit(command:string) =
   if execShellCmd(command) != 0: quit(QuitFailure)
@@ -175,18 +229,37 @@ task gdengine, "build the godot engine, default with debugging and tools args:\n
   discard execShellCmd &"scons -j{threads}  p={gd_platform} bits={gd_bits} {flags}"
   setCurrentDir(projDir)
 
+task term, "launches the terminal with cwatch, pass in another arg for second panel":
+  if hostOS == "windows":
+    var curDir = getCurrentDir()
+    var second = ""
+    if args.len == 1:
+      second = &"cmd /k \".\\build.exe {args[0]}\""
+
+    discard execShellCmd &"wt -d {curDir} ./build cwatch; split-pane -d {curDir} {second}"
+  else:
+    echo &"not implemented on {hostOS}"
+
 task gd, "launches terminal with godot project\n\toptional argument for scene to open":
   var gdbin = if "debug" in getSharedFlags(): gd_tools_debug_bin else: gd_tools_release_bin
+  var scn = ""
+  if args.len == 1:
+    scn = args[0] & ".tscn"
 
-  var curDir = getCurrentDir()
+  echo &"{gdbin} --verbose -e --path {appDir} {scn}"
+  discard execShellCmd &"{gdbin} --verbose -e --path {appDir} {scn}"
+
+task play, "launches the project without editor, optionally pass in name of a scene to run":
+  var gdbin = if "debug" in getSharedFlags(): gd_tools_debug_bin else: gd_tools_release_bin
+
   var projDir = "app"
 
   var scn = ""
   if args.len == 1:
     scn = args[0] & ".tscn"
 
-  if hostOS == "windows": discard execShellCmd &"wt -d {curDir} {gdbin} -e --path {projDir} {scn}"
-  else: discard execShellCmd &"{gdbin} -e --path {projDir} {scn}"
+  echo &"{gdbin} --verbose --path {projDir} {scn}"
+  discard execShellCmd &"{gdbin} --verbose --path {projDir} {scn}"
 
 proc checkPrereq(packageName, sourceName:string, verbose:bool = true) =
   var (output, exitCode) = execCmdEx(&"nimble path {packageName}")
@@ -217,7 +290,7 @@ task prereqs, "Install prerequisites, and calls genapi task":
 proc buildWatcher():string =
   {.cast(gcsafe).}:
     var flags = getSharedFlags()
-    let dllPath = &"{dllDir}/watcher.{dllExt}"
+    let dllPath = &"{dllDir}/{dllPrefix}watcher.{dllExt}"
     let watcherPath = "gdnim/watcher.nim"
     if ("force" in flags) or not fileExists(&"{dllPath}") or (getLastModificationTime(watcherPath) > getLastModificationTime(&"{dllPath}")):
       result = execnim(&"{gdpathFlags} --define:dllDir:{baseDllDir} --define:dllExt:{dllExt}", flags, &"{dllPath}", watcherPath)
@@ -265,9 +338,9 @@ proc getBuildSettings(): BuildSettings =
   result.settingsTable = settingsTable
 
 proc safeDllFilePath(compName:string): string =
-  &"{dllDir}/{compName}_safe.{dllExt}"
+  &"{dllDir}/{dllPrefix}{compName}_safe.{dllExt}"
 proc hotDllFilePath(compName:string): string =
-  &"{dllDir}/{compName}.{dllExt}"
+  &"{dllDir}/{dllPrefix}{compName}.{dllExt}"
 proc nimFilePath(compName:string): string =
   var nimFilePath = &"{compsDir}/{compName}.nim"
   if not fileExists(nimFilePath):
@@ -275,6 +348,8 @@ proc nimFilePath(compName:string): string =
   nimFilePath
 proc gdnsFilePath(compName:string): string =
   &"{gdnsDir}/{compName}.gdns"
+proc gdnlibFilePath(compName:string): string =
+  &"{gdnlibDir}/{compName}.gdnlib"
 proc tscnFilePath(compName:string): string =
   &"{tscnDir}/{compName}.tscn"
 
@@ -329,7 +404,7 @@ proc buildAllComps(res:var seq[FlowVar[string]], buildSettings:BuildSettings):in
   count
 
 
-task gencomp, "generate a component template (nim, gdns, tscn files), pass in the component name and  base class name in snake case\n\tUsage: ./build gencomp [notscn] comp_name base_node":
+task gencomp, "generate a component template (nim, gdns, gdnlib, tscn files), pass in the component name and  base class name in snake case\n\tUsage: ./build gencomp [notscn] comp_name base_node":
 
   var compName:string
   var baseClassModuleName:string
@@ -385,12 +460,18 @@ task gencomp, "generate a component template (nim, gdns, tscn files), pass in th
   echo &"building {compName}"
   echo buildComp(compName, buildSettings)
 
-task delcomp, "delete a component, removes the nim, gdns, tscn, and dlls associated with the component":
+
+task delcomp, "delete a component, removes the nim, gdns, gdnlib, tscn, and dlls associated with the component":
+  if args.len != 1:
+    echo "Usage: ./build delcomp comp_name"
+    quit()
+
   var compName = args[0]
   var files = @[nimFilePath(compName),
               gdnsFilePath(compName),
+              gdnlibFilePath(compName),
               tscnFilePath(compName)]
-  for dllFile in walkFiles(&"{dllDir}/{compName}*"):
+  for dllFile in walkFiles(&"{dllDir}/{dllPrefix}{compName}*"):
     files.add dllFile
 
   for filepath in files:
@@ -402,7 +483,7 @@ task delcomp, "delete a component, removes the nim, gdns, tscn, and dlls associa
 # are loaded by the watcher.dll via resources. At runtime, the watcher.dll will copy
 # the {compName}_safe.dll to the {compName}.dll and monitor the _dlls
 # folder to see if _safe.dll is rebuilt.
-task comp, "build component and generate a gdns file\n\tno component name means all components are rebuilt\n\tmove safe to hot with 'move' or 'm' flag (e.g.) build -m target\n\t--force or --f force rebuilds\n\t--nocheck or --nc skips compile without dll check but not force rebuilt":
+task comp, "build component and generate a gdns and a gdnlib files\n\tno component name means all components are rebuilt\n\tmove safe to hot with 'move' or 'm' flag (e.g.) build -m target\n\t--force or --f force rebuilds\n\t--nocheck or --nc skips compile without dll check but not force rebuilt":
   var buildSettings = getBuildSettings()
 
   if not (compName == ""):
@@ -443,7 +524,7 @@ task gentool, "generate a tool / editor plugin scaffold":
   else:
     echo &"{cfg} already exists"
 
-  genGdns(compName)
+  genGdns(compName, isTool = true)
 
 task flags, "display the flags used for compiling components":
   echo ">>> Task  compiler flags <<<"

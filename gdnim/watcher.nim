@@ -12,7 +12,12 @@ Components need to register with the Watcher, so they can be reloaded.
 During a reload phase, the components data can be save and restored upon reload.
 ]#
 const dllDir {.strdefine.}:string = "_dlls"
-const dllExt {.strdefine.}:string = "dll"
+const dllPrefix = when hostOS == "linux": "lib"
+                else: ""
+const dllExt = when hostOS == "windows": "dll"
+             elif hostOS == "linux": "so"
+             elif hostOS == "macosx": "dylib"
+             else: "unknown"
 
 const META_INSTANCE_ID = "hot_meta_instance_id" #track instances
 const UNLOAD_PROCNAME = "hot_unload"
@@ -20,9 +25,9 @@ const DEPENDENCY_RELOAD_PROCNAME = "hot_depreload"
 const ADD_CHILD = "add_child"
 
 func safeDllPath(compName:string):string =
-  &"{dllDir}/{compName}_safe.{dllExt}"
+  &"{dllDir}/{dllPrefix}{compName}_safe.{dllExt}"
 func hotDllPath(compName:string):string =
-  &"{dllDir}/{compname}.{dllExt}"
+  &"{dllDir}/{dllPrefix}{compname}.{dllExt}"
 
 gdobj WatcherUnregisterHelper of Reference:
   # helper to store callback on node tree_exited
@@ -60,7 +65,7 @@ func lerp(a, b, t:float32):float32 =
 
 
 when defined(does_reload):
-  gdobj(Watcher of Control, tool):
+  gdobj Watcher of Control:
 
     signal notice(code:int, msg:string)
 
@@ -273,7 +278,7 @@ when defined(does_reload):
       self.emit_signal("notice", int(code).toVariant, msg.toVariant)
 
 else:
-  gdobj(Watcher of Control, tool):
+  gdobj Watcher of Control:
     var enableWatch {.gdExport.}:bool = true
     var watchIntervalSeconds {.gdExport.}:float = 0.3
     var reloadIntervalSeconds {.gdExport.}:float = 0.3
@@ -281,3 +286,5 @@ else:
     var enableNotifications {.gdExport.}:bool = true
     var notification_duration {.gdExport.}:float  = 10.0
     var notification_time_to_fade {.gdExport.}:float = 2.0
+    proc register_dependencies(compName:string, dependencies:seq[string]) {.gdExport.} = discard
+    proc register_instance(compName:string, saverPath:string, loaderPath:string, saverProc=UNLOAD_PROCNAME, loaderProc=ADD_CHILD):seq[byte] {.gdExport.} = discard
