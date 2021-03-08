@@ -495,7 +495,6 @@ margin_left = 7.0
 margin_top = 6.0
 margin_right = 7.0
 margin_bottom = 6.0
-player_stats_path = NodePath("../../YSort/Player/Stats")
 
 [node name="Background" type="Sprite" parent="."]
 position = Vector2( 160, 90 )
